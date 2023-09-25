@@ -20,7 +20,8 @@
   "homepage": "https://github.com/TimaGribanov/fullstackopen-part3#readme",
   "dependencies": {
     "express": "^4.18.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "static": "^2.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

@@ -41,11 +41,8 @@ app.get('/info', (req, res) => {
             res.send(`<p>The phonebook has info for ${number} people</p><p>${date}</p>`))    
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
-
-    if (body.name === undefined || body.number === undefined)
-        return res.status(400).json({ error: 'name or number missing' })
 
     const person = new Person({
         name: body.name,
@@ -53,20 +50,22 @@ app.post('/api/persons', (req, res) => {
         visible: body.visible || true
     })
 
-    person.save().then(savedPerson => res.json(savedPerson))
+    person
+        .save()
+        .then(savedPerson => res.json(savedPerson))
+        .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
     const id = req.params.id
-    const newPerson = {
-        name: req.body.name,
-        number: req.body.number,
-        visible: req.body.visible
-    }
+    const { name, number, visible } = req.body
 
-    console.log(newPerson)
 
-    Person.findByIdAndUpdate(id, newPerson, { new: true })
+    Person.findByIdAndUpdate(
+        id, 
+        { name, number, visible }, 
+        { new: true, runValidators: true, context: 'query' }
+    )
         .then(result => res.json(result))
         .catch(error => next(error))
 })
@@ -90,6 +89,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     next(error)
